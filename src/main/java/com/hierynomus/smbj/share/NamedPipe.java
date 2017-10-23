@@ -20,7 +20,7 @@ import com.hierynomus.mssmb2.SMB2FileId;
 import com.hierynomus.mssmb2.messages.SMB2ReadResponse;
 import com.hierynomus.mssmb2.messages.SMB2WriteResponse;
 import com.hierynomus.protocol.commons.buffer.Buffer;
-import com.hierynomus.smbj.common.SMBBuffer;
+import com.hierynomus.smb.SMBBuffer;
 import com.hierynomus.smbj.common.SMBRuntimeException;
 import com.hierynomus.smbj.io.ArrayByteChunkProvider;
 import org.slf4j.Logger;
@@ -29,8 +29,8 @@ import org.slf4j.LoggerFactory;
 import java.io.Closeable;
 
 public class NamedPipe implements Closeable {
-    private static final int FSCTL_PIPE_PEEK = 0x0011400c;
-    private static final int FSCTL_PIPE_TRANSCEIVE = 0x0011c017;
+    private static final long FSCTL_PIPE_PEEK = 0x0011400cL;
+    private static final long FSCTL_PIPE_TRANSCEIVE = 0x0011c017L;
 
     protected final Logger logger = LoggerFactory.getLogger(this.getClass());
 
@@ -133,8 +133,8 @@ public class NamedPipe implements Closeable {
      * pipe into a single network operation.
      *
      * @param inBuffer  the input message
-     * @param inOffset the offset in <code>inBuffer</code> at which the input message start
-     * @param inLength the length of the input message in <code>inBuffer</code> starting at <code>inOffset</code>
+     * @param inOffset  the offset in <code>inBuffer</code> at which the input message start
+     * @param inLength  the length of the input message in <code>inBuffer</code> starting at <code>inOffset</code>
      * @param outBuffer the buffer in which to write the output message
      * @param outOffset the offset in <code>outBuffer</code> at which the output message should be written
      * @param outLength the maximum number of bytes that may be written to <code>outBuffer</code> starting from <code>outOffset</code>
@@ -189,7 +189,7 @@ public class NamedPipe implements Closeable {
      * @param inLength the number of bytes from <code>inData</code> to send, starting at <code>offset</code>
      * @return the response data or <code>null</code> if the control code did not produce a response
      */
-    public byte[] ioctl(int ctlCode, boolean isFsCtl, byte[] inData, int inOffset, int inLength) {
+    public byte[] ioctl(long ctlCode, boolean isFsCtl, byte[] inData, int inOffset, int inLength) {
         return share.ioctl(fileId, ctlCode, isFsCtl, inData, inOffset, inLength);
     }
 
@@ -207,7 +207,7 @@ public class NamedPipe implements Closeable {
      * @param outLength the maximum amount of data to write in <code>outData</code>, starting at <code>outOffset</code>
      * @return the number of bytes written to <code>outData</code>
      */
-    public int ioctl(int ctlCode, boolean isFsCtl, byte[] inData, int inOffset, int inLength, byte[] outData, int outOffset, int outLength) {
+    public int ioctl(long ctlCode, boolean isFsCtl, byte[] inData, int inOffset, int inLength, byte[] outData, int outOffset, int outLength) {
         return share.ioctl(fileId, ctlCode, isFsCtl, inData, inOffset, inLength, outData, outOffset, outLength);
     }
 

@@ -13,14 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hierynomus.smbj.transport;
+package com.hierynomus.protocol.transport;
 
 import com.hierynomus.protocol.Packet;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
 
-public interface TransportLayer<P extends Packet<P, ?>> {
+public interface TransportLayer<P extends Packet<?>> {
 
     /**
      * Write the packet to the transport.
@@ -31,17 +31,18 @@ public interface TransportLayer<P extends Packet<P, ?>> {
 
     /**
      * Connect to the remote side
-     * 
+     *
      * @param remoteAddress The remote address to connect to
      */
     void connect(InetSocketAddress remoteAddress) throws IOException;
 
     /**
      * Disconnect from the remote side
-     * 
+     *
      * @throws IOException
      */
     void disconnect() throws IOException;
+
     /**
      * Checks if the transport layer is currently connected.
      */

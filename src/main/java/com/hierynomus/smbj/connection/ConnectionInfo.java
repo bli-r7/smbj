@@ -18,6 +18,7 @@ package com.hierynomus.smbj.connection;
 import com.hierynomus.mssmb2.SMB2GlobalCapability;
 import com.hierynomus.mssmb2.messages.SMB2NegotiateResponse;
 
+import com.hierynomus.ntlm.messages.WindowsVersion;
 import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.UUID;
@@ -26,11 +27,8 @@ import static com.hierynomus.protocol.commons.EnumWithValue.EnumUtils.toEnumSet;
 
 public class ConnectionInfo {
 
+    private WindowsVersion windowsVersion;
     // All SMB2 Dialect
-    private SessionTable sessionTable = new SessionTable();
-    private SessionTable preauthSessionTable = new SessionTable();
-    private OutstandingRequests outstandingRequests = new OutstandingRequests();
-    private SequenceWindow sequenceWindow;
     private byte[] gssNegotiateToken;
     private UUID serverGuid;
     private String serverName;
@@ -50,14 +48,13 @@ public class ConnectionInfo {
     private byte[] preauthIntegrityHashValue;
     private String cipherId;
 
-
-    public ConnectionInfo(UUID clientGuid, String serverName) {
+    ConnectionInfo(UUID clientGuid, String serverName) {
         // new SessionTable
         // new OutstandingRequests
         this.clientGuid = clientGuid;
-        this.sequenceWindow = new SequenceWindow();
         this.gssNegotiateToken = new byte[0];
         this.serverName = serverName;
+        this.clientCapabilities = EnumSet.of(SMB2GlobalCapability.SMB2_GLOBAL_CAP_DFS);
     }
 
     void negotiated(SMB2NegotiateResponse response) {
@@ -68,24 +65,16 @@ public class ConnectionInfo {
         serverSecurityMode = response.getSecurityMode();
     }
 
-    SequenceWindow getSequenceWindow() {
-        return sequenceWindow;
-    }
-
-    SessionTable getSessionTable() {
-        return sessionTable;
-    }
-
-    public SessionTable getPreauthSessionTable() {
-        return preauthSessionTable;
-    }
-
     public UUID getClientGuid() {
         return clientGuid;
     }
 
     public boolean isServerRequiresSigning() {
         return (serverSecurityMode & 0x02) > 0;
+    }
+
+    public boolean isServerSigningEnabled() {
+        return (serverSecurityMode & 0x01) > 0;
     }
 
     public NegotiatedProtocol getNegotiatedProtocol() {
@@ -104,12 +93,20 @@ public class ConnectionInfo {
         return serverName;
     }
 
-    public OutstandingRequests getOutstandingRequests() {
-        return outstandingRequests;
-    }
-
     public boolean supports(SMB2GlobalCapability capability) {
         return serverCapabilities.contains(capability);
+    }
+
+    public EnumSet<SMB2GlobalCapability> getClientCapabilities() {
+        return clientCapabilities;
+    }
+
+    public WindowsVersion getWindowsVersion() {
+        return windowsVersion;
+    }
+
+    public void setWindowsVersion(WindowsVersion windowsVersion) {
+        this.windowsVersion = windowsVersion;
     }
 
     @Override

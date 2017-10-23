@@ -17,7 +17,7 @@ package com.hierynomus.mssmb2;
 
 import com.hierynomus.mserref.NtStatus;
 import com.hierynomus.protocol.commons.buffer.Buffer;
-import com.hierynomus.smbj.common.SMBBuffer;
+import com.hierynomus.smb.SMBBuffer;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -30,7 +30,8 @@ public class SMB2Error {
 
     private List<SMB2ErrorData> errorData = new ArrayList<>();
 
-    SMB2Error() {}
+    SMB2Error() {
+    }
 
     SMB2Error read(SMB2Header header, SMBBuffer buffer) throws Buffer.BufferException {
         buffer.skip(2); // StructureSize (2 bytes)
@@ -43,7 +44,10 @@ public class SMB2Error {
         } else if (byteCount > 0) {
             readErrorData(header, buffer);
         } else if (byteCount == 0) {
-            buffer.skip(1); // ErrorData (1 byte)
+            // Win10 1709 does not provide ErrorData
+            if (buffer.available() > 0) {
+                buffer.skip(1); // ErrorData (1 byte)
+            }
         }
 
         return this;
@@ -51,6 +55,7 @@ public class SMB2Error {
 
     /**
      * [MS-SMB2] 2.2.2.1 SMB2 ERROR Context Response
+     *
      * @param header
      * @param buffer
      * @param errorContextCount
@@ -66,6 +71,7 @@ public class SMB2Error {
 
     /**
      * [MS-SMB2] 2.2.2.2 ErrorData format
+     *
      * @param header
      * @param buffer
      * @return
@@ -83,7 +89,8 @@ public class SMB2Error {
         return errorData;
     }
 
-    interface SMB2ErrorData {}
+    public interface SMB2ErrorData {
+    }
 
     public static class SymbolicLinkError implements SMB2ErrorData {
         private boolean absolute;
@@ -99,6 +106,7 @@ public class SMB2Error {
             int endOfResponse = buffer.rpos() + symLinkLength;
             buffer.skip(4); // SymLinkErrorTag (4 bytes) (always 0x4C4D5953)
             buffer.skip(4); // ReparseTag (4 bytes) (always 0xA000000C)
+            buffer.skip(2); // ReparseDataLength (2 bytes)
             unparsedPathLength = buffer.readUInt16(); // UnparsedPathLength (2 bytes)
             int substituteNameOffset = buffer.readUInt16(); // SubstituteNameOffset (2 bytes)
             int substituteNameLength = buffer.readUInt16(); // SubstituteNameLength (2 bytes)
@@ -111,12 +119,22 @@ public class SMB2Error {
             return this;
         }
 
+        /**
+         * Read a string at an offset from the current position in the buffer.
+         *
+         * After reading the string the position of the buffer is reset to the position where we started.
+         *
+         * @param offset The offset to read from
+         * @param length The length of the String to read
+         * @return The read String
+         * @throws Buffer.BufferException If the buffer underflows.
+         */
         private String readOffsettedString(SMBBuffer buffer, int offset, int length) throws Buffer.BufferException {
             int curpos = buffer.rpos();
             String s = null;
             if (length > 0) {
                 buffer.rpos(curpos + offset);
-                s = buffer.readString(StandardCharsets.UTF_16, length);
+                s = buffer.readString(StandardCharsets.UTF_16, length / 2);
             }
             buffer.rpos(curpos);
             return s;

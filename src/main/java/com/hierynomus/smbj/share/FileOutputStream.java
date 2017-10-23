@@ -17,7 +17,7 @@ package com.hierynomus.smbj.share;
 
 import com.hierynomus.smbj.ProgressListener;
 import com.hierynomus.smbj.io.ByteChunkProvider;
-import com.hierynomus.smbj.transport.TransportException;
+import com.hierynomus.protocol.transport.TransportException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,15 +26,15 @@ import java.io.OutputStream;
 
 class FileOutputStream extends OutputStream {
 
-    private File file;
+    private SMB2Writer writer;
     private ProgressListener progressListener;
     private boolean isClosed = false;
     private ByteArrayProvider provider;
 
     private static final Logger logger = LoggerFactory.getLogger(FileOutputStream.class);
 
-    FileOutputStream(File file, int bufferSize, ProgressListener progressListener) {
-        this.file = file;
+    FileOutputStream(SMB2Writer writer, int bufferSize, ProgressListener progressListener) {
+        this.writer = writer;
         this.progressListener = progressListener;
         this.provider = new ByteArrayProvider(bufferSize);
     }
@@ -60,21 +60,23 @@ class FileOutputStream extends OutputStream {
     @Override
     public void write(byte b[], int off, int len) throws IOException {
         verifyConnectionNotClosed();
+        int offset = off;
+        int length = len;
         do {
-            int writeLen = Math.min(len, provider.maxSize());
+            int writeLen = Math.min(length, provider.maxSize());
 
             while (provider.isBufferFull(writeLen)) {
                 flush();
             }
 
             if (!provider.isBufferFull()) {
-                provider.writeBytes(b, off, writeLen);
+                provider.writeBytes(b, offset, writeLen);
             }
-            
-            off += writeLen;
-            len -= writeLen;
-            
-        } while (len > 0);
+
+            offset += writeLen;
+            length -= writeLen;
+
+        } while (length > 0);
     }
 
     @Override
@@ -86,7 +88,7 @@ class FileOutputStream extends OutputStream {
     }
 
     private void sendWriteRequest() throws TransportException {
-        file.write(provider, progressListener);
+        writer.write(provider, progressListener);
     }
 
     @Override
@@ -99,7 +101,7 @@ class FileOutputStream extends OutputStream {
         provider.reset();
 
         isClosed = true;
-        file = null;
+        writer = null;
         logger.debug("EOF, {} bytes written", provider.getOffset());
     }
 

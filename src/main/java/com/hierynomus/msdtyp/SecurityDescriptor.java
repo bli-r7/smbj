@@ -17,7 +17,7 @@ package com.hierynomus.msdtyp;
 
 import com.hierynomus.protocol.commons.EnumWithValue;
 import com.hierynomus.protocol.commons.buffer.Buffer;
-import com.hierynomus.smbj.common.SMBBuffer;
+import com.hierynomus.smb.SMBBuffer;
 
 import java.util.EnumSet;
 import java.util.Set;
@@ -46,8 +46,8 @@ public class SecurityDescriptor {
 
     public void write(SMBBuffer buffer) {
         int startPos = buffer.wpos();
-        buffer.putByte((byte)1); // Revision (1 byte)
-        buffer.putByte((byte)0); // Sbz1 (1 byte)
+        buffer.putByte((byte) 1); // Revision (1 byte)
+        buffer.putByte((byte) 0); // Sbz1 (1 byte)
 
         EnumSet<Control> c = EnumSet.copyOf(control);
         // Always generate self-relative security descriptors; required for SMB

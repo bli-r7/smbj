@@ -19,7 +19,7 @@ import com.hierynomus.mserref.NtStatus;
 import com.hierynomus.mssmb2.SMB2FileId;
 import com.hierynomus.mssmb2.SMB2Packet;
 import com.hierynomus.protocol.commons.buffer.Buffer;
-import com.hierynomus.smbj.common.SMBBuffer;
+import com.hierynomus.smb.SMBBuffer;
 
 /**
  * [MS-SMB2].pdf 2.2.32 SMB2 IOCTL Response
@@ -33,10 +33,6 @@ public class SMB2IoctlResponse extends SMB2Packet {
 
     byte[] inputBuffer;
     byte[] outputBuffer;
-
-    public SMB2IoctlResponse() {
-        super();
-    }
 
     @Override
     protected void readMessage(SMBBuffer buffer) throws Buffer.BufferException {
@@ -67,6 +63,7 @@ public class SMB2IoctlResponse extends SMB2Packet {
     /**
      * [MS-SMB2].pdf 3.3.4.4
      * STATUS_BUFFER_OVERFLOW and STATUS_INVALID_PARAMETER should be treated as a success code.
+     *
      * @param status The status to verify
      * @return
      */
@@ -81,5 +78,13 @@ public class SMB2IoctlResponse extends SMB2Packet {
 
     public byte[] getInputBuffer() {
         return inputBuffer;
+    }
+
+    public int getControlCode() {
+        return controlCode;
+    }
+
+    public SMB2FileId getFileId() {
+        return fileId;
     }
 }
